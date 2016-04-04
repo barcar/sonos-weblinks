@@ -38,14 +38,14 @@
         <tbody>
           <xsl:for-each select="//script[@id='sonos-info']">
             <xsl:sort select="elem[@key='ZoneName']"/>
-            <xsl:variable name="HardwareVersion">
-              <xsl:value-of select="elem[@key='HardwareVersion']"/>
+            <xsl:variable name="ZoneName">
+              <xsl:value-of select="elem[@key='ZoneName']"/>
             </xsl:variable>
             <xsl:variable name="IPAddress">
               <xsl:value-of select="elem[@key='IPAddress']"/>
             </xsl:variable>
             <tr>
-              <td><xsl:value-of select="elem[@key='ZoneName']"/></td>
+              <td><xsl:copy-of select="$ZoneName"/></td>
               <td><xsl:value-of select="elem[@key='modelName']"/></td>
               <td><xsl:copy-of select="$IPAddress" /></td>
               <td><xsl:value-of select="elem[@key='MACAddress']"/></td>
@@ -82,7 +82,8 @@
               <td>
                 <div class="btn-group btn-group-xs">
                   <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Action<span class="caret"></span></button> 
-                  <ul class="dropdown-menu">
+                  <ul class="dropdown-menu dropdown-menu-right">
+                    <li class="dropdown-header">Zone: <xsl:copy-of select="$ZoneName"/></li>
                     <li>
                       <a target="_blank">
                         <xsl:attribute name="href">
@@ -124,6 +125,7 @@
                       </a>
                     </li>
                     <li role="separator" class="divider"></li>
+                    <li class="dropdown-header">Wi-Fi Control</li>
                     <li>
                       <a target="_blank">
                         <xsl:attribute name="href">
@@ -131,7 +133,7 @@
                           <xsl:copy-of select="$IPAddress"/>
                           <xsl:text>:1400/wifictrl?wifi=on</xsl:text>
                         </xsl:attribute>
-                        WiFi On
+                        On
                       </a>
                     </li>
                     <li>
@@ -141,7 +143,7 @@
                           <xsl:copy-of select="$IPAddress"/>
                           <xsl:text>:1400/wifictrl?wifi=off</xsl:text>
                         </xsl:attribute>
-                        WiFi Off
+                        Off
                       </a>
                     </li>
                     <li>
@@ -151,7 +153,7 @@
                           <xsl:copy-of select="$IPAddress"/>
                           <xsl:text>:1400/wifictrl?wifi=persist-off</xsl:text>
                         </xsl:attribute>
-                        WiFi Persist-Off
+                        Persist-Off
                       </a>
                     </li>
                   </ul> <!-- Dropdown-Menu -->
