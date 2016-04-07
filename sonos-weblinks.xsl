@@ -17,6 +17,8 @@
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous" />
       <!-- Latest compiled and minified Bootstrap JavaScript -->
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+      <!-- script to reboot all Sonos devices -->
+      <script src="sonos-reboot-all.js"></script>
       <title>Sonos Web Links</title>
     </head>
   <body>
@@ -29,6 +31,7 @@
             <th>Model</th>
             <th>IP Address</th>
             <th>MAC Address</th>
+            <th>STP</th>
             <th>Status</th>
             <th>Support Review</th>
             <th>Device Description</th>
@@ -36,19 +39,32 @@
           </tr>
         </thead>
         <tbody>
+          <xsl:variable name="STPSecondaryNodes" select="//table[@key='STPSecondaryNodes']"/>
           <xsl:for-each select="//script[@id='sonos-info']">
-            <xsl:sort select="elem[@key='ZoneName']"/>
-            <xsl:variable name="ZoneName">
-              <xsl:value-of select="elem[@key='ZoneName']"/>
-            </xsl:variable>
-            <xsl:variable name="IPAddress">
-              <xsl:value-of select="elem[@key='IPAddress']"/>
-            </xsl:variable>
+            <xsl:sort select="elem[@key='ZoneName']" />
+            <xsl:variable name="ZoneName" select="elem[@key='ZoneName']" />
+            <xsl:variable name="IPAddress" select="elem[@key='IPAddress']" />
+            <xsl:variable name="MACAddress" select="elem[@key='MACAddress']" />
+            <xsl:variable name="WiFiMACAddress" select="elem[@key='WiFiMACAddress']"/>
+            <xsl:variable name="STPRootBridge" select="elem[@key='STPRootBridge']" />
+            <xsl:variable name="STPSecondaryNode" select="$STPSecondaryNodes/elem[@key=$WiFiMACAddress or @key=$MACAddress]" />
+            <xsl:variable name="RebootOrder"> 
+              <xsl:call-template name="RebootOrderTemplate">
+                <xsl:with-param name="root" select="$STPRootBridge" />
+                <xsl:with-param name="secondary" select="$STPSecondaryNode" />
+              </xsl:call-template>
+            </xsl:variable> 
             <tr>
               <td><xsl:copy-of select="$ZoneName"/></td>
               <td><xsl:value-of select="elem[@key='modelName']"/></td>
               <td><xsl:copy-of select="$IPAddress" /></td>
-              <td><xsl:value-of select="elem[@key='MACAddress']"/></td>
+              <td><xsl:copy-of select="$MACAddress"/> (Wired) <br /> <xsl:copy-of select="$WiFiMACAddress"/> (WiFi)</td>
+              <td>
+                <xsl:call-template name="StpDepthTemplate">
+                  <xsl:with-param name="root" select="$STPRootBridge" />
+                  <xsl:with-param name="secondary" select="$STPSecondaryNode" />
+                </xsl:call-template>
+              </td>
               <td>
                 <a target="_blank">
                   <xsl:attribute name="href">
@@ -86,6 +102,10 @@
                     <li class="dropdown-header">Zone: <xsl:copy-of select="$ZoneName"/></li>
                     <li>
                       <a target="_blank">
+                        <xsl:attribute name="class">
+                          <xsl:text>SonosReboot </xsl:text>
+                          <xsl:value-of select="$RebootOrder"/>
+                        </xsl:attribute>
                         <xsl:attribute name="href">
                           <xsl:text>http://</xsl:text>
                           <xsl:copy-of select="$IPAddress"/>
@@ -111,7 +131,7 @@
                           <xsl:copy-of select="$IPAddress"/>
                           <xsl:text>:1400/region.htm</xsl:text>
                         </xsl:attribute>
-                        WiFi Region
+                        Set WiFi Region
                       </a>
                     </li>
                     <li>
@@ -163,7 +183,6 @@
           </xsl:for-each>
         </tbody>
       </table>
-      <p class="small">XML generated at <mark><xsl:value-of select="//finished/@timestr"/></mark> with command <code><xsl:value-of select="//nmaprun/@args"/></code></p>
       <h3>Sonos Web Interface References</h3>
       <ul>
         <li><a target="_blank" href="https://github.com/barcar/sonos-weblinks">Sonos-WebLinks on GitHub</a></li>
@@ -177,4 +196,36 @@
   </html>
 </xsl:template>
 
-</xsl:stylesheet> 
+<xsl:template name="StpDepthTemplate">
+  <xsl:param name="root"/>
+  <xsl:param name="secondary"/>
+    <xsl:choose>
+      <xsl:when test="$root='Yes'">
+        <xsl:text>&#8730;</xsl:text>
+      </xsl:when>
+      <xsl:when test="$secondary='Yes'">
+        <xsl:text>2&#176;</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>3&#176;</xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+</xsl:template>
+
+<xsl:template name="RebootOrderTemplate">
+  <xsl:param name="root"/>
+  <xsl:param name="secondary"/>
+    <xsl:choose>
+      <xsl:when test="$root='Yes'">
+        <xsl:text>SonosReboot1st </xsl:text>
+      </xsl:when>
+      <xsl:when test="$secondary='Yes'">
+        <xsl:text>SonosReboot2nd </xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:text>SonosReboot3rd </xsl:text>
+      </xsl:otherwise>
+    </xsl:choose>
+</xsl:template>
+
+</xsl:stylesheet>

@@ -48,7 +48,9 @@ xml_patterns = {
     "<ExtraInfo>.-</ExtraInfo>",
     "<modelNumber>.-</modelNumber>",
     "<modelDescription>.-</modelDescription>",
-    "<modelName>.-</modelName>"
+    "<modelName>.-</modelName>",
+    "<Command cmdline=\'/usr/sbin/brctl showstp br0\'>.-path cost%s-0%s-.-</Command>",
+    "<Command cmdline=\'/sbin/ifconfig\'>.-</Command>",
     }
 
 -- Only run on devices listening on the Sonos web UI port
@@ -77,7 +79,7 @@ action = function(host, port)
 
       -- get info content and store in table
       response = http.get(host, port, target)
-      if response.body then
+       if response.body then
         body["info"] = response.body
       end
      
@@ -87,14 +89,29 @@ action = function(host, port)
       if response.body then
         body["desc"] = response.body
       end
+      
+      -- get stp content and store in table
+      target = "/status/showstp"
+      response = http.get(host, port, target)
+      if response.body then
+        body["stp"] = response.body
+      end
 
+      -- get ifconfig content and store in table
+      target = "/status/ifconfig"
+      response = http.get(host, port, target)
+      if response.body then
+        body["ifconfig"] = response.body
+      end
+      
       if next(body) then
 
           -- loop through all responses
           for j, response in pairs(body) do
 
             -- debug output          
-            stdnse.print_debug(1, "Response: %s", response )
+            stdnse.print_debug(2, "Index: %s", j )
+            stdnse.print_debug(2, "Response: %s", response )
                           
             -- retrive info from XML response using patterns
             for i, pattern in ipairs(xml_patterns) do
@@ -106,12 +123,55 @@ action = function(host, port)
   
                 -- check we got a match to parse
                 if c then
-                    
-                  -- parse XML node to separate attribute from value  
+                  
+                  stdnse.print_debug(1, "Raw XML: %s", c )
+                                      
+                  -- parse XML node to separate attribute from value 
                   local attribute, value = string.match (c, '^<(.-)>(.-)</.->$')
                   
+                  -- Special handling for STP information
+                  if string.match(attribute, '^Command cmdline=\'/usr/sbin/brctl showstp br0\'$') then
+                    
+                    -- Record that this is the STP Root Bridge
+                    info["STPRootBridge"] = "Yes"
+                    
+                    -- Modify the attribute to something more meaningful
+                    attribute = "STPSecondaryNodes"
+                    
+                    local stp_secondary = {}
+                                        
+                    -- find all secondary nodes 
+                    for node in string.gmatch(value, 'tunnel to (%w%w:%w%w:%w%w:%w%w:%w%w:%w%w) %(remote STP state = forwarding') do
+                      
+                      stdnse.print_debug(1, "STP Node: %s", node )
+                      -- store MAC address in table
+                      stp_secondary[node] = "Yes"
+                                       
+                    end
+
+                      -- copy node table ready for storage
+                      value = stp_secondary
+                    
+                  end
+
+                  -- Special handling for ifconfig information
+                  if string.match(attribute, '^Command cmdline=\'/sbin/ifconfig\'$') then
+
+                    -- Modify the attribute to something more meaningful
+                    attribute = "WiFiMACAddress"
+
+                    -- Special handling for ifconfig information
+                    local ath0_mac_address = string.match(value, 'ath0.-(%w%w:%w%w:%w%w:%w%w:%w%w:%w%w)')
+                    if ath0_mac_address then
+                      
+                      stdnse.print_debug(1, "ATH0 MAC Address: %s", ath0_mac_address )
+                      value = ath0_mac_address
+                      
+                    end
+                    
+                  end
+                  
                   -- optional debug output
-                  stdnse.print_debug(1, "Raw XML: %s", c )
                   stdnse.print_debug(1, "Attribute: %s", attribute)
                   stdnse.print_debug(1, "Value: %s", value)
     
