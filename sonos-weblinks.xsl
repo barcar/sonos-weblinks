@@ -183,6 +183,7 @@
           </xsl:for-each>
         </tbody>
       </table>
+      <p class="small">XML generated at <mark><xsl:value-of select="//finished/@timestr"/></mark> with command <code><xsl:value-of select="//nmaprun/@args"/></code></p>
       <h3>Sonos Web Interface References</h3>
       <ul>
         <li><a target="_blank" href="https://github.com/barcar/sonos-weblinks">Sonos-WebLinks on GitHub</a></li>
