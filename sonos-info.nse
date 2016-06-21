@@ -11,18 +11,20 @@ Extracts and outputs Sonos info
 -- @output
 -- PORT     STATE SERVICE       REASON
 -- 1400/tcp open  cadkey-tablet syn-ack
--- | http-sonos:
--- |   modelNumber: S0
+-- | sonos-info:
 -- |   modelName: Sonos ProductName
--- |   modelDescription: Sonos ProductDescription
 -- |   HardwareVersion: 0.0.0.0-0
--- |   IPAddress: 000.000.000.000
--- |   ZoneName: Room
+-- |   modelNumber: S0
 -- |   MACAddress: 00:00:00:00:00:00
+-- |   modelDescription: Sonos ProductDescription
+-- |   displayVersion: 0.0
 -- |   LocalUID: RINCON_00000000000000000
--- |   ExtraInfo: OTP: 0.00.0(0-00-0-zp0s-0.0)
 -- |   SoftwareVersion: 00.0-00000
+-- |   WiFiMACAddress: 00:00:00:00:00:00
+-- |   ExtraInfo: OTP: 0.00.0(0-00-0-zp0s-0.0)
 -- |_  SerialNumber: 00--00-00-00-00:00
+-- |   ZoneName: Room
+-- |   IPAddress: 000.000.000.000
 -- 
 ---
 
@@ -42,6 +44,7 @@ xml_patterns = {
     "<LocalUID>.-</LocalUID>",
     "<SerialNumber>.-</SerialNumber>",
     "<SoftwareVersion>.-</SoftwareVersion>",
+    "<displayVersion>.-</displayVersion>",
     "<HardwareVersion>.-</HardwareVersion>",
     "<IPAddress>.-</IPAddress>",
     "<MACAddress>.-</MACAddress>",
@@ -52,8 +55,7 @@ xml_patterns = {
     "<Command cmdline=\'/usr/sbin/brctl showstp br0\'>.-path cost%s-0%s-.-</Command>",
     "<Command cmdline=\'/sbin/ifconfig\'>.-</Command>",
     }
-
--- Only run on devices listening on the Sonos web UI port
+    -- Only run on devices listening on the Sonos web UI port
 portrule = shortport.port_or_service( 1400, "http", "tcp", "open")
 
 action = function(host, port)

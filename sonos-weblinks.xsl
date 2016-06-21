@@ -29,6 +29,7 @@
           <tr>
             <th>Zone Name</th>
             <th>Model</th>
+            <th>Version</th>
             <th>IP Address</th>
             <th>MAC Address</th>
             <th>STP</th>
@@ -57,6 +58,7 @@
             <tr>
               <td><xsl:copy-of select="$ZoneName"/></td>
               <td><xsl:value-of select="elem[@key='modelName']"/></td>
+              <td><xsl:value-of select="elem[@key='displayVersion']"/></td>
               <td><xsl:copy-of select="$IPAddress" /></td>
               <td><xsl:copy-of select="$MACAddress"/> (Wired) <br /> <xsl:copy-of select="$WiFiMACAddress"/> (WiFi)</td>
               <td>
